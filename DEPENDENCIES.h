@@ -1,9 +1,6 @@
-#ifndef __dependencies_H_INCLUDED__
-#define __dependencies_H_INCLUDED__
-using std::cout;
-using std::cin;
-using std::vector;
-using std::string;
+#ifndef DEPENDENCIES_H
+#define DEPENDENCIES_H
+
 // roll the dice
 int rollDice(int diceType) {
   int diceSide = rand() % diceType;
@@ -13,8 +10,8 @@ int rollDice(int diceType) {
 // player class
 class Player {
  public:
-  string name;
-  string classType;
+  std::string name;
+  std::string classType;
   int strength;
   int endurance;
   int id;
@@ -23,46 +20,114 @@ class Player {
   int getHP() { return (10 + ((strength + endurance) * 2)); }
   int getHit() { return rollDice(DT); }
 
-  Player(string inpName, string inpClassType, int inpStrength, int inpEndurance,
-         int inpId) {
+  Player(std::string inpName, std::string inpClassType, int inpStrength, int inpEndurance, int inpId) {
     name = inpName;
     classType = inpClassType;
     strength = inpStrength;
     endurance = inpEndurance;
     id = inpId;
   }
+  Player() = default;
 };
 
 // Enemies
 class Enemy {
  public:
   // var declaration
-  string name;
+  std::string name;
   double AC;  // armor class ablity to resist hits
   int DT;  // dice used to attack
   int eid;  // id for Enemies (Enemy id)
   int HP = round(HP * (1 + (AC * 10)));
   int getHit() { return rollDice(DT); }
 
-  Enemy(string inpName, int inpHP, double inpAC, int inpDT, int inpEid) {
+  Enemy(std::string inpName, int inpHP, double inpAC, int inpDT, int inpEid) {
     name = inpName;
     HP = inpHP;
     AC = inpAC;
     DT = inpDT;
     eid = inpEid;
   }
+  Enemy() = default;
 };
 
+ std::istream& operator>>(std::istream& str, Player& player) {
+    std::string line;
+    if (std::getline(str, line)) {
+       std::stringstream lineStream(line);
+
+       std::string name;
+       std::string classType;
+       int         strength;
+       int         endurance;
+       int         id;
+
+       if (lineStream >> name >> classType >> strength >> endurance >> id) {
+           // Set up the player object.
+           player = Player(name, classType, strength, endurance, id);
+       }
+       else {
+           // Error when reading player characteristics from line.
+           // Need to set the errror state of the stream.
+           str.setstate(std::ios::failbit);
+       }
+    }
+    return str;
+}
+
+std::vector<Player> getPlayers() {
+    std::ifstream                 playerFile("Player.txt");
+    std::istream_iterator<Player> playerIter(playerFile);
+    std::istream_iterator<Player> end;
+
+    return std::vector<Player>(playerIter, end);
+}
+
+
+
+ std::istream& operator>>(std::istream& str, Enemy& enemy) {
+    std::string line;
+    if (std::getline(str, line)) {
+       std::stringstream lineStream(line);
+			 
+       std::string name;
+       int         HP;
+       double      AC;
+       int         DT;
+       int         eid;
+
+       if (lineStream >> name >> HP >> AC >> DT >> eid) {
+           // Set up the enemy object.
+           enemy = Enemy(name, HP, AC, DT, eid);
+       }
+       else {
+           // Error when reading player characteristics from line.
+           // Need to set the errror state of the stream.
+           str.setstate(std::ios::failbit);
+       }
+    }
+    return str;
+}
+
+std::vector<Enemy> getEnemies() {
+    std::ifstream                 enemyFile("Enemy.txt");
+    std::istream_iterator<Enemy> enemyIter(enemyFile);
+    std::istream_iterator<Enemy> end;
+
+    return std::vector<Enemy>(enemyIter, end);
+}
+
+
 // Get context of the situation
-string enemyContxt(int option) {
+std::string enemyContxt(int option) {
   int randNum = round(rand() % (9) + 1);
 
-  static const string names[] = {
+  static const std::string names[] = {
       "\nBruneor the ", "\nRichard the ", "\nFilbert the ", "\nLodric the ",
       "\nRuuker the ",  "\nKruger the ",  "\nCharles the ", "\nAaarl the ",
       "\nVasiilk the ", "\nGubl the "};
 
-  static const string introductions[] = {
+  static const std::string introductions[] = {
       " hits you with a blunt slinky ", " whacks you with a feather ",
       " pushes you into Tiny Tim ", " stabs you with a lamp ",
       " shoots you with an M16 catapult ", " summons a spirit to pester you ",
@@ -71,7 +136,7 @@ string enemyContxt(int option) {
       "terrible mispronuncation of your name ",
       " simply does nothing ", " burps up a gnerm (a miniature knome) "};
 
-  static const string transitions[] = {
+  static const std::string transitions[] = {
       "and says 'Die, filthy swine!' ",
       "then trips on a gruubliyth. ",
       "and then, snarls! ",
@@ -94,10 +159,10 @@ string enemyContxt(int option) {
 }
 
 // Get context of the situation
-string playerContxt(Player &player) {
+std::string playerContxt(Player &player) {
   int randNum = round(rand() % (19) + 1);
   // pretty much the same thing with the finction above
-  string name = player.name;
+  std::string name = player.name;
 
   if (randNum == 1) return "\n" + name + " strikes with an evil Urrgleumbeck ";
   if (randNum == 2)
@@ -143,35 +208,32 @@ int fightEnemy(Player &player, Enemy &enemy) {
   int playerLastRoll = pHit;
   int enemyLastRoll = eHit;
   int counter = 0;
-  string name = enemyContxt(1);
-  cout << "\n->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->\n";
-  cout << "Welcome to the Arena!\n";
-  cout << "Starting HP: \n" << player.name << "'s HP: " << pHP << "\n"
-       << enemy.name << "'s HP: " << eHP << "\n";
-  cout << "Begin Battle!\n";
+  std::string name = enemyContxt(1);
+  std::cout << "\n->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->\n";
+  std::cout << "Welcome to the Arena!\n";
+  std::cout << "Starting HP: \n" << player.name << "'s HP: " << pHP << "\n" << enemy.name << "'s HP: " << eHP << "\n";
+  std::cout << "Begin Battle!\n";
   for (;;) {
     while (playerLastRoll == pHit || enemyLastRoll == eHit && counter != 0) {
       eHit = enemy.getHit();
       pHit = player.getHit();
     }
     sleep(1);
-    cout << name << enemy.name << enemyContxt(2) << enemyContxt(3) << "Dealing "
-         << eHit << " Damage!\n";
+    std::cout << name << enemy.name << enemyContxt(2) << enemyContxt(3) << "Dealing " << eHit << " Damage!\n";
     pHP = pHP - eHit;
     if (pHP <= 0) {
-      cout << "\n" << player.name << " is Dead!\n";
-      cout << enemy.name << "'s HP left: " << eHP << "\n";
-      cout << player.name << "'s HP left: " << pHP << "\n";
+      std::cout << "\n" << player.name << " is Dead!\n";
+      std::cout << enemy.name << "'s HP left: " << eHP << "\n";
+      std::cout << player.name << "'s HP left: " << pHP << "\n";
       break;
     } else {
       sleep(1);
-      cout << "\n" << playerContxt(player) << " Dealing " << pHit
-           << " Damage!\n";
+      std::cout << "\n" << playerContxt(player) << " Dealing " << pHit << " Damage!\n";
       eHP = eHP - pHit;
       if (eHP <= 0) {
-        cout << "\n" << enemy.name << " is Dead!\n";
-        cout << enemy.name << "'s HP left: " << eHP << "\n";
-        cout << player.name << "'s HP left: " << pHP << "\n";
+        std::cout << "\n" << enemy.name << " is Dead!\n";
+        std::cout << enemy.name << "'s HP left: " << eHP << "\n";
+        std::cout << player.name << "'s HP left: " << pHP << "\n";
         break;
       }
     }
@@ -192,11 +254,10 @@ int fightPlayer(Player &player1, Player &player2) {
   int playerLastRoll1 = pHit1;
   int playerLastRoll2 = pHit2;
   int counter = 0;
-  cout << "\n->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->\n";
-  cout << "Welcome to the Arena!\n";
-  cout << "Starting HP: \n" << player1.name << "'s HP: " << pHP1 << "\n"
-       << player2.name << "'s HP: " << pHP2 << "\n";
-  cout << "Begin Battle!\n";
+  std::cout << "\n->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->\n";
+  std::cout << "Welcome to the Arena!\n";
+  std::cout << "Starting HP: \n" << player1.name << "'s HP: " << pHP1 << "\n" << player2.name << "'s HP: " << pHP2 << "\n";
+  std::cout << "Begin Battle!\n";
   for (;;) {
     while (playerLastRoll1 == pHit1 ||
            playerLastRoll2 == pHit2 && counter != 0) {
@@ -204,23 +265,21 @@ int fightPlayer(Player &player1, Player &player2) {
       pHit2 = player2.getHit();
     }
     sleep(1);
-    cout << "\n" << playerContxt(player1) << " Dealing " << pHit1
-         << " Damage!\n";
+    std::cout << "\n" << playerContxt(player1) << " Dealing " << pHit1 << " Damage!\n";
     pHP2 = pHP2 - pHit1;
     if (pHP2 <= 0) {
-      cout << "\n" << player2.name << " is Dead!\n";
-      cout << player1.name << "'s HP left: " << pHP1 << "\n";
-      cout << player2.name << "'s HP left: " << pHP2 << "\n";
+      std::cout << "\n" << player2.name << " is Dead!\n";
+      std::cout << player1.name << "'s HP left: " << pHP1 << "\n";
+      std::cout << player2.name << "'s HP left: " << pHP2 << "\n";
       break;
     } else {
       sleep(1);
-      cout << "\n" << playerContxt(player2) << " Dealing " << pHit2
-           << " Damage!\n";
+      std::cout << "\n" << playerContxt(player2) << " Dealing " << pHit2 << " Damage!\n";
       pHP1 = pHP1 - pHit2;
       if (pHP1 <= 0) {
-        cout << "\n" << player1.name << " is Dead!\n";
-        cout << player1.name << "'s HP left: " << pHP1 << "\n";
-        cout << player2.name << "'s HP left: " << pHP2 << "\n";
+        std::cout << "\n" << player1.name << " is Dead!\n";
+        std::cout << player1.name << "'s HP left: " << pHP1 << "\n";
+        std::cout << player2.name << "'s HP left: " << pHP2 << "\n";
         break;
       }
     }
@@ -232,11 +291,11 @@ int fightPlayer(Player &player1, Player &player2) {
   return 0;
 }
 
-int enemyComboCheck(int id1, int id2, vector<Player> &allPlayers,
-                    vector<Enemy> &allEnemies) {
-  vector<Player>::iterator player_iter = allPlayers.begin();
-  vector<Enemy>::iterator enemy_iter;
-  bool found = false;
+int entityComboCheck(int id1, int id2, std::vector<Player> &allPlayers, std::vector<Enemy> &allEnemies, int option) {
+	bool found = false;
+	if(option == 1){
+  std::vector<Player>::iterator player_iter = allPlayers.begin();
+  std::vector<Enemy>::iterator enemy_iter;
 
   // try to find player
   while (player_iter != allPlayers.end() && !found) {
@@ -265,10 +324,10 @@ int enemyComboCheck(int id1, int id2, vector<Player> &allPlayers,
   return 0;
 }
 
-int playerComboCheck(int id1, int id2, vector<Player> &allPlayers) {
-  vector<Player>::iterator player_iter1 = allPlayers.begin();
-  vector<Player>::iterator player_iter2;
-  bool found = false;
+	if(option == 2){
+		
+	std::vector<Player>::iterator player_iter1 = allPlayers.begin();
+  std::vector<Player>::iterator player_iter2;
 
   // try to find player 1
   while (player_iter1 != allPlayers.end() && !found) {
@@ -294,7 +353,12 @@ int playerComboCheck(int id1, int id2, vector<Player> &allPlayers) {
     if (found) fightPlayer(*player_iter1, *player_iter2);
     return 0;
   }
-  return 0;
+  
+
+	}
 }
 
+
 #endif
+
+
